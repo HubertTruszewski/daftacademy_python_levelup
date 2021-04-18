@@ -45,6 +45,8 @@ def root():
 
 @app.get("/hello/{name}", response_model=HelloResp)
 async def read_item(name: str):
+    with open('test.txt', 'w') as file:
+        file.write(f"Hello {name}\n")
     return HelloResp(msg=f"Hello {name}")
 
 
@@ -97,9 +99,9 @@ async def auth_get(response: Response, password: str = None, password_hash: str 
 
 @app.post("/register", response_model=Patient)
 async def register_post(person: Person, response: Response):
-    person.name = ''.join([i for i in person.name if i.isalpha()])
-    person.surname = ''.join([i for i in person.surname if i.isalpha()])
-    len_sum = len(person.name) + len(person.surname)
+    len_name = len(''.join([i for i in person.name if i.isalpha()]))
+    len_surname = len(''.join([i for i in person.surname if i.isalpha()]))
+    len_sum = len_name + len_surname
     response_date = datetime.date.today()
     date_to_add = datetime.timedelta(days=len_sum)
     vaccination_date = response_date + date_to_add
