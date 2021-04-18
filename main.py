@@ -97,6 +97,8 @@ async def auth_get(response: Response, password: str = None, password_hash: str 
 
 @app.post("/register", response_model=Patient)
 async def register_post(person: Person, response: Response):
+    person.name = ''.join([i for i in person.name if i.isalpha()])
+    person.surname = ''.join([i for i in person.surname if i.isalpha()])
     len_sum = len(person.name) + len(person.surname)
     response_date = datetime.date.today()
     date_to_add = datetime.timedelta(days=len_sum)
