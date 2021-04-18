@@ -81,7 +81,12 @@ def method_delete():
 
 
 @app.get("/auth")
-async def auth_get(password: str, password_hash: str, response: Response):
+async def auth_get(response: Response, password: str = None, password_hash: str = None):
+    print(password)
+    print(password_hash)
+    if password is None or password_hash is None or len(password_hash) == 0 or len(password) == 0:
+        response.status_code = 401
+        return
     encoded_password = password.encode()
     hashed = sha512(encoded_password).hexdigest()
     if hashed == password_hash:
