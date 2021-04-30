@@ -147,7 +147,7 @@ def check_password_and_generate_token(header):
 async def login_session(response: Response, Authorization: str = Header(None)):
     token = check_password_and_generate_token(Authorization)
     if token:
-        if len(app.session_token == 3):
+        if len(app.session_token) == 3:
             app.session_token = app.session_token[1:]
         app.session_token.append(token)
         response.set_cookie(key="session_token", value=token)
@@ -159,7 +159,7 @@ async def login_session(response: Response, Authorization: str = Header(None)):
 async def login_token(Authorization: str = Header(None)):
     token = check_password_and_generate_token(Authorization)
     if token:
-        if len(app.token == 3):
+        if len(app.token) == 3:
             app.token = app.token[1:]
         app.token.append(token)
         return {"token": token}
