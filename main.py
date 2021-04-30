@@ -151,17 +151,19 @@ async def login_session(response: Response, Authorization: str = Header(None)):
             app.session_token = app.session_token[1:]
         app.session_token.append(token)
         response.set_cookie(key="session_token", value=token)
+        response.status_code = 201
         return "OK"
     raise HTTPException(status_code=401, detail='Unauthorized')
 
 
 @app.post("/login_token")
-async def login_token(Authorization: str = Header(None)):
+async def login_token(response: Response, Authorization: str = Header(None)):
     token = check_password_and_generate_token(Authorization)
     if token:
         if len(app.token) == 3:
             app.token = app.token[1:]
         app.token.append(token)
+        response.status_code = 201
         return {"token": token}
     raise HTTPException(status_code=401, detail='Unauthorized')
 
