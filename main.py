@@ -1,11 +1,19 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Header
 from hashlib import sha512
 import datetime
+import random
+from fastapi.encoders import jsonable_encoder
+from fastapi.param_functions import Cookie, Query
+import uvicorn
+import base64
+from fastapi.exceptions import HTTPException
 from pydantic import BaseModel
-from starlette.responses import Response
+from starlette.responses import HTMLResponse, JSONResponse, PlainTextResponse, RedirectResponse, Response
 
 app = FastAPI()
 app.counter = 0
+app.session_token = []
+app.token = []
 app.list_of_patients = []
 
 
@@ -20,14 +28,6 @@ class MethodResponse(BaseModel):
 class Person(BaseModel):
     name: str
     surname: str
-
-
-# class Patient(BaseModel):
-#     id: int
-#     name: str
-#     surname: str
-#     register_date: str
-#     vaccination_date: str
 
 
 class Patient(BaseModel):
@@ -45,8 +45,6 @@ def root():
 
 @app.get("/hello/{name}", response_model=HelloResp)
 async def read_item(name: str):
-    with open('test.txt', 'w') as file:
-        file.write(f"Hello {name}\n")
     return HelloResp(msg=f"Hello {name}")
 
 
@@ -122,3 +120,109 @@ async def patient_get(id: int, response: Response):
     else:
         response.status_code = 200
         return app.list_of_patients[id-1]
+
+
+@app.get("/hello")
+async def hello():
+    today_date = datetime.date.today().isoformat()
+    content = "<h1>Hello! Today date is {}</h1>".format(today_date)
+    return HTMLResponse(content=content)
+
+
+def check_password_and_generate_token(header):
+    auth_header = header
+    decoded_data = auth_header.split(" ")[1]
+    decoded_data_bytes = decoded_data.encode('ascii')
+    base_decode_result = base64.b64decode(decoded_data_bytes)
+    result = base_decode_result.decode('ascii')
+    user, password = tuple(result.split(":"))
+    if user == "4dm1n" and password == "NotSoSecurePa$$":
+        random_num = random.randint(0, 1000)
+        token = sha512((user+password+str(random_num)).encode())
+        return token.hexdigest()
+    return False
+
+
+@app.post("/login_session")
+async def login_session(response: Response, Authorization: str = Header(None)):
+    token = check_password_and_generate_token(Authorization)
+    if token:
+        if len(app.session_token == 3):
+            app.session_token = app.session_token[1:]
+        app.session_token.append(token)
+        response.set_cookie(key="session_token", value=token)
+        return "OK"
+    raise HTTPException(status_code=401, detail='Unauthorized')
+
+
+@app.post("/login_token")
+async def login_token(Authorization: str = Header(None)):
+    token = check_password_and_generate_token(Authorization)
+    if token:
+        if len(app.token == 3):
+            app.token = app.token[1:]
+        app.token.append(token)
+        return {"token": token}
+    raise HTTPException(status_code=401, detail='Unauthorized')
+
+
+@app.get('/welcome_session')
+async def welcome_session(format: str = Query(None), session_token=Cookie(None)):
+    if session_token is None or session_token not in app.session_token:
+        raise HTTPException(status_code=401, detail="Unauthorized")
+    if format == 'json':
+        msg = {"message": "Welcome!"}
+        json_msg = jsonable_encoder(msg)
+        return JSONResponse(content=json_msg)
+    elif format == 'html':
+        return HTMLResponse('<h1>Welcome!</h1>')
+    else:
+        return PlainTextResponse('Welcome!')
+
+
+@app.get('/welcome_token')
+async def welcome_token(format: str = Query(None),  token: str = ""):
+    if token is False or token not in app.token:
+        raise HTTPException(status_code=401, detail="Unauthorized")
+    if format == 'json':
+        msg = {"message": "Welcome!"}
+        json_msg = jsonable_encoder(msg)
+        return JSONResponse(content=json_msg)
+    elif format == 'html':
+        return HTMLResponse('<h1>Welcome!</h1>')
+    else:
+        return PlainTextResponse('Welcome!')
+
+
+@app.delete("/logout_session")
+async def logout_session(format: str = Query(None), session_token=Cookie(None)):
+    if session_token is False or session_token not in app.session_token:
+        raise HTTPException(status_code=401, detail="Unauthorized")
+    app.session_token.remove(session_token)
+    resp = RedirectResponse("/logged_out?format={}".format(format), status_code=302)
+    return resp
+
+
+@app.delete("/logout_token")
+async def logout_token(format: str = Query(None), token: str = Query(None)):
+    if token is False or token not in app.token:
+        raise HTTPException(status_code=401, detail="Unauthorized")
+    app.token.remove(token)
+    resp = RedirectResponse("/logged_out?format={}".format(format), status_code=302)
+    return resp
+
+
+@app.get("/logged_out")
+async def logged_out(format: str = Query(None)):
+    if format == "json":
+        msg = {"message": "Logged out!"}
+        json_msg = jsonable_encoder(msg)
+        return JSONResponse(json_msg)
+    elif format == "html":
+        msg = "<h1>Logged out!</h1>"
+        return HTMLResponse(content=msg)
+    else:
+        return PlainTextResponse(content="Logged out!")
+
+if __name__ == "__main__":
+    uvicorn.run(app, host="0.0.0.0", port=8000)
