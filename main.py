@@ -3,6 +3,8 @@ import sqlite3
 from fastapi import FastAPI, HTTPException
 from fastapi.param_functions import Query
 from pydantic import BaseModel
+import uvicorn
+
 
 app = FastAPI()
 
@@ -78,6 +80,10 @@ class Employees(BaseModel):
 
 class ProductsExtended(BaseModel):
     products_extended: list
+
+
+class Orders(BaseModel):
+    orders: list
 
 
 @app.patch("/shippers/edit/{shipper_id}")
@@ -203,3 +209,30 @@ async def products_extended():
     for result in results:
         results_list.append({'id': result[0], 'name': result[1], 'category': result[2], 'supplier': result[3]})
     return ProductsExtended(products_extended=results_list)
+
+
+@app.get("/products/{id}/orders")
+async def products_orders(id: int):
+    def calc_total_price(unit_price, quantity, discount):
+        return ((unit_price * quantity) - (discount * (unit_price * quantity)))
+    results = app.db_connection.execute(
+        'SELECT Orders.OrderId, Customers.CompanyName, `Order Details`.quantity, `Order Details`.UnitPrice, `Order Details`.discount '
+        'FROM Orders JOIN Customers ON Customers.CustomerID = Orders.CustomerID JOIN `Order Details` ON Orders.OrderID = `Order Details`.OrderID'
+        ' JOIN Products ON Products.ProductID = `Order Details`.ProductID WHERE Products.ProductID = ? ORDER BY Orders.OrderID', (id, )
+    ).fetchall()
+    if len(results) == 0:
+        raise HTTPException(status_code=404, detail="Not found")
+    results_list = []
+    for result in results:
+        orderid = result[0]
+        companyname = result[1]
+        quantity = result[2]
+        unitprice = result[3]
+        discount = result[4]
+        total_price = calc_total_price(unitprice, quantity, discount)
+        results_list.append({'id': orderid, 'customer': companyname, 'quantity': quantity, 'total_price': total_price})
+    return Orders(orders=results_list)
+
+
+if __name__ == "__main__":
+    uvicorn.run(app, host="0.0.0.0", port=8000)
