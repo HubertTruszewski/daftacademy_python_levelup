@@ -247,7 +247,7 @@ async def add_category(category: Category, response: Response):
 
     cursor = app.db_connection.cursor()
     cursor.execute(
-        'INSERT INTO Categories (CategoryName) VALUES ("?")', (category.name, )
+        'INSERT INTO Categories (CategoryName) VALUES (?)', (category.name, )
     )
     app.db_connection.commit()
     new_id = cursor.lastrowid
