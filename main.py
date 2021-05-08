@@ -4,7 +4,6 @@ from fastapi import FastAPI, HTTPException
 from fastapi.param_functions import Query
 from pydantic import BaseModel
 
-
 app = FastAPI()
 
 
@@ -77,6 +76,10 @@ class Employees(BaseModel):
     employees: list
 
 
+class ProductsExtended(BaseModel):
+    products_extended: list
+
+
 @app.patch("/shippers/edit/{shipper_id}")
 async def artists_add(shipper_id: int, shipper: Shipper):
     app.db_connection.execute(
@@ -139,8 +142,9 @@ async def categories():
 
 @app.get("/customers")
 async def customers():
+    app.db_connection.text_factory = lambda b: b.decode(errors="ignore")
     categories = app.db_connection.execute(
-        "SELECT CustomerID, ContactName, Address, PostalCode, City, Country from Customers ORDER BY CustomerID;"
+        'SELECT CustomerID, ContactName, Address, PostalCode, City, Country from Customers WHERE CustomerID="VALON" ORDER BY CustomerID;'
     ).fetchall()
     results_list = list()
     for result in categories:
@@ -152,6 +156,8 @@ async def customers():
         full_address += result[4] if result[4] is not None else ' '
         full_address += ' '
         full_address += result[5] if result[5] is not None else ' '
+        if len(full_address.split()) == 0:
+            full_address = True
         results_list.append({"id": result[0], "name": result[1], "full_address": full_address})
     return Customers(customers=results_list)
 
@@ -184,3 +190,16 @@ async def employees(limit: int = Query(None), offset: int = Query(None), order: 
     for result in results:
         result_list.append({'id': result[0], 'first_name': result[1], 'last_name': result[2], 'city': result[3]})
     return Employees(employees=result_list)
+
+
+@app.get("/products_extended")
+async def products_extended():
+    results = app.db_connection.execute(
+        "SELECT Products.ProductID, Products.ProductName, Categories.CategoryName, Suppliers.CompanyName "
+        "FROM Products JOIN Categories ON Products.CategoryID = Categories.CategoryID "
+        "JOIN Suppliers ON Products.SupplierID = Suppliers.SupplierID"
+    )
+    results_list = []
+    for result in results:
+        results_list.append({'id': result[0], 'name': result[1], 'category': result[2], 'supplier': result[3]})
+    return ProductsExtended(products_extended=results_list)
