@@ -1,6 +1,7 @@
 import sqlite3
 
 from fastapi import FastAPI, HTTPException
+from fastapi.param_functions import Query
 from pydantic import BaseModel
 
 
@@ -70,6 +71,10 @@ class Customers(BaseModel):
 class Product(BaseModel):
     id: int
     name: str
+
+
+class Employees(BaseModel):
+    employees: list
 
 
 @app.patch("/shippers/edit/{shipper_id}")
@@ -160,3 +165,22 @@ async def products(id: int):
         return Product(id=result[0], name=result[1])
     else:
         raise HTTPException(status_code=404, detail="Not found")
+
+
+@app.get("/employees")
+async def employees(limit: int = Query(None), offset: int = Query(None), order: str = Query(None)):
+    if order is not None and order not in {'first_name', 'last_name', 'city'}:
+        raise HTTPException(status_code=400)
+    order_dict = {'first_name': "FirstName", 'last_name': "LastName", 'city': "City"}
+    result_list = []
+    query = "SELECT EmployeeID, FirstName, LastName, City FROM Employees"
+    if order is not None:
+        query += f' ORDER BY {order_dict[order]}'
+    if limit is not None:
+        query += f' LIMIT {limit}'
+    if offset is not None:
+        query += f' OFFSET {offset}'
+    results = app.db_connection.execute(query).fetchall()
+    for result in results:
+        result_list.append({'id': result[0], 'first_name': result[1], 'last_name': result[2], 'city': result[3]})
+    return Employees(employees=result_list)
