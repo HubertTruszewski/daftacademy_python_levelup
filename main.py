@@ -1,6 +1,6 @@
 import sqlite3
 
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 
 
@@ -16,15 +16,6 @@ async def startup():
 @app.on_event("shutdown")
 async def shutdown():
     app.db_connection.close()
-
-
-@app.get("/products")
-async def products():
-    products = app.db_connection.execute("SELECT ProductName FROM Products").fetchall()
-    return {
-        "products": products,
-        "products_counter": len(products)
-    }
 
 
 @app.get("/suppliers/{supplier_id}")
@@ -74,6 +65,11 @@ class Categories(BaseModel):
 
 class Customers(BaseModel):
     customers: list
+
+
+class Product(BaseModel):
+    id: int
+    name: str
 
 
 @app.patch("/shippers/edit/{shipper_id}")
@@ -143,6 +139,24 @@ async def customers():
     ).fetchall()
     results_list = list()
     for result in categories:
-        full_address = f'{result[2]} {result[3]} {result[4]} {result[5]}'
+        full_address = str()
+        full_address += result[2] if result[2] is not None else ' '
+        full_address += ' '
+        full_address += result[3] if result[3] is not None else ' '
+        full_address += ' '
+        full_address += result[4] if result[4] is not None else ' '
+        full_address += ' '
+        full_address += result[5] if result[5] is not None else ' '
         results_list.append({"id": result[0], "name": result[1], "full_address": full_address})
     return Customers(customers=results_list)
+
+
+@app.get("/products/{id}")
+async def products(id: int):
+    result = app.db_connection.execute(
+        "SELECT ProductID, ProductName FROM Products WHERE ProductID=?", (id,)
+    ).fetchone()
+    if result is not None:
+        return Product(id=result[0], name=result[1])
+    else:
+        raise HTTPException(status_code=404, detail="Not found")
