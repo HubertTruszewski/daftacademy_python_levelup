@@ -139,9 +139,10 @@ async def categories():
 @app.get("/customers")
 async def customers():
     categories = app.db_connection.execute(
-        "SELECT CustomerID, ContactName from Customers ORDER BY CustomerID;"
+        "SELECT CustomerID, ContactName, Address, PostalCode, City, Country from Customers ORDER BY CustomerID;"
     ).fetchall()
     results_list = list()
     for result in categories:
-        results_list.append({"id": result[0], "name": result[1]})
+        full_address = f'{result[2]} {result[3]} {result[4]} {result[5]}'
+        results_list.append({"id": result[0], "name": result[1], "full_address": full_address})
     return Customers(customers=results_list)
