@@ -244,7 +244,6 @@ async def products_orders(id: int):
 
 @app.post("/categories")
 async def add_category(category: Category, response: Response):
-    raise HTTPException(status_code=400)
     cursor = app.db_connection.cursor()
     cursor.execute(
         'INSERT INTO Categories (CategoryName) VALUES (?)', (category.name, )
