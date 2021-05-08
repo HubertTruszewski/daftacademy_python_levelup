@@ -1,8 +1,10 @@
 import sqlite3
+from typing import Optional
 
 from fastapi import FastAPI, HTTPException
 from fastapi.param_functions import Query
 from pydantic import BaseModel
+from starlette.responses import JSONResponse, Response
 import uvicorn
 
 
@@ -84,6 +86,11 @@ class ProductsExtended(BaseModel):
 
 class Orders(BaseModel):
     orders: list
+
+
+class Category(BaseModel):
+    id: Optional[int]
+    name: str
 
 
 @app.patch("/shippers/edit/{shipper_id}")
@@ -234,6 +241,47 @@ async def products_orders(id: int):
         results_list.append({'id': orderid, 'customer': companyname, 'quantity': quantity, 'total_price': total_price})
     return Orders(orders=results_list)
 
+
+@app.post("/categories")
+async def add_category(category: Category, response: Response):
+
+    cursor = app.db_connection.cursor()
+    cursor.execute(
+        'INSERT INTO Categories (CategoryName) VALUES ("?")', (category.name, )
+    )
+    app.db_connection.commit()
+    new_id = cursor.lastrowid
+    response.status_code = 201
+    return Category(id=new_id, name=category.name)
+
+
+@app.put("/categories/{id}")
+async def modify_category(id: int, category: Category):
+    results = app.db_connection.execute('SELECT * FROM Categories WHERE CategoryID=?', (id, )).fetchall()
+    if len(results) == 0:
+        raise HTTPException(status_code=404, detail="No such category")
+    app.db_connection.execute(
+        'UPDATE Categories SET CategoryName=:name WHERE CategoryID=:id', {"name": category.name, 'id': id}
+    )
+    app.db_connection.commit()
+    results = app.db_connection.execute('SELECT * FROM Categories WHERE CategoryID=?', (id, )).fetchone()
+    return Category(id=results[0], name=results[1])
+
+
+@app.delete("/categories/{id}")
+async def delete_category(id: int):
+    results = app.db_connection.execute('SELECT * FROM Categories WHERE CategoryID=?', (id, )).fetchall()
+    if len(results) == 0:
+        raise HTTPException(status_code=404, detail="No such category")
+    app.db_connection.execute(
+        'PRAGMA foreign_keys=off;'
+    )
+    app.db_connection.execute(
+        'DELETE FROM Categories WHERE CategoryID=:id', {'id': id}
+    )
+    app.db_connection.commit()
+    msg = {"deleted": 1}
+    return JSONResponse(status_code=200, content=msg)
 
 if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=8000)
