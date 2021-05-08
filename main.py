@@ -230,6 +230,7 @@ async def products_orders(id: int):
         unitprice = result[3]
         discount = result[4]
         total_price = calc_total_price(unitprice, quantity, discount)
+        total_price = round(total_price, 2)
         results_list.append({'id': orderid, 'customer': companyname, 'quantity': quantity, 'total_price': total_price})
     return Orders(orders=results_list)
 
