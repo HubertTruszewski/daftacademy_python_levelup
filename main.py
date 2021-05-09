@@ -156,7 +156,7 @@ async def categories():
 @app.get("/customers")
 async def customers():
     app.db_connection.text_factory = lambda b: b.decode(errors="ignore")
-    query = "SELECT CustomerID, ContactName, (COALESCE(Address, '') || ' ' || COALESCE(PostalCode, '') || ' ' || COALESCE(City, '') || ' ' || COALESCE(Country, '')) FROM Customers ORDER BY UPPER(CustomerID);"
+    query = "SELECT CustomerID, CompanyName, (COALESCE(Address, '') || ' ' || COALESCE(PostalCode, '') || ' ' || COALESCE(City, '') || ' ' || COALESCE(Country, '')) FROM Customers ORDER BY UPPER(CustomerID);"
     categories = app.db_connection.execute(query).fetchall()
     results_list = list()
     for result in categories:
