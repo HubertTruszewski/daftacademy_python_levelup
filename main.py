@@ -156,20 +156,11 @@ async def categories():
 @app.get("/customers")
 async def customers():
     app.db_connection.text_factory = lambda b: b.decode(errors="ignore")
-    categories = app.db_connection.execute(
-        'SELECT CustomerID, ContactName, Address, PostalCode, City, Country from Customers ORDER BY UPPER(CustomerID);'
-    ).fetchall()
+    query = "SELECT CustomerID, ContactName, (COALESCE(Address, '') || ' ' || COALESCE(PostalCode, '') || ' ' || COALESCE(City, '') || ' ' || COALESCE(Country, '')) FROM Customers ORDER BY UPPER(CustomerID);"
+    categories = app.db_connection.execute(query).fetchall()
     results_list = list()
     for result in categories:
-        full_address = str()
-        full_address += result[2] if result[2] is not None else ' '
-        full_address += ' '
-        full_address += result[3] if result[3] is not None else ' '
-        full_address += ' '
-        full_address += result[4] if result[4] is not None else ' '
-        full_address += ' '
-        full_address += result[5] if result[5] is not None else ' '
-        results_list.append({"id": result[0], "name": result[1], "full_address": full_address})
+        results_list.append({"id": result[0], "name": result[1], "full_address": result[2]})
     return Customers(customers=results_list)
 
 
