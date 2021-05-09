@@ -157,7 +157,7 @@ async def categories():
 async def customers():
     app.db_connection.text_factory = lambda b: b.decode(errors="ignore")
     categories = app.db_connection.execute(
-        'SELECT CustomerID, ContactName, Address, PostalCode, City, Country from Customers WHERE CustomerID="VALON" ORDER BY CustomerID;'
+        'SELECT CustomerID, ContactName, Address, PostalCode, City, Country from Customers ORDER BY UPPER(CustomerID);'
     ).fetchall()
     results_list = list()
     for result in categories:
@@ -169,8 +169,6 @@ async def customers():
         full_address += result[4] if result[4] is not None else ' '
         full_address += ' '
         full_address += result[5] if result[5] is not None else ' '
-        if len(full_address.split()) == 0:
-            full_address = True
         results_list.append({"id": result[0], "name": result[1], "full_address": full_address})
     return Customers(customers=results_list)
 
