@@ -24,12 +24,12 @@ async def get_shippers(db: Session = Depends(get_db)):
     return crud.get_shippers(db)
 
 
-@router.get('/suppliers', response_model=List[Shipper])
+@router.get('/suppliers')
 async def get_suppliers(db: Session = Depends(get_db)):
     return crud.get_all_suppliers(db)
 
 
-@router.get('/suppliers/{id}', response_model=Shipper)
+@router.get('/suppliers/{id}')
 async def get_suppliers_by_id(id: int, db: Session = Depends(get_db)):
     result = crud.get_one_supplier(db, id)
     if result is None:
