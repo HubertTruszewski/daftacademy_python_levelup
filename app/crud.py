@@ -24,7 +24,10 @@ def get_one_supplier(db: Session, sup_id: int):
 
 def get_supplier_products(db: Session, sup_id: int):
     # return db.query(models2.Product).join(models2.Category).filter(models2.Product.SupplierID == sup_id).order_by(models2.Product.ProductID.desc()).all()
-    return db.query(models2.Product.ProductID, models2.Product.ProductName, models2.Product.Discontinued, models2.Category).filter(models2.Product.CategoryID == models2.Category.CategoryID).filter(models2.Product.SupplierID == sup_id).order_by(models2.Product.ProductID.desc()).all()
+    result = db.query(models2.Product.ProductID, models2.Product.ProductName, models2.Product.Discontinued, models2.Category).filter(models2.Product.CategoryID == models2.Category.CategoryID).filter(models2.Product.SupplierID == sup_id).order_by(models2.Product.ProductID.desc()).all()
+    if result is None:
+        raise HTTPException(status_code=404)
+    return result
 
 
 def create_new_supplier(db: Session, supplier):

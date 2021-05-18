@@ -13,8 +13,8 @@ class Category(Base):
 
     CategoryID = Column(SmallInteger, primary_key=True, server_default=text("nextval('categories_categoryid_seq'::regclass)"))
     CategoryName = Column(String(15), nullable=False)
-    Description = Column(Text)
-    Picture = Column(LargeBinary)
+    # Description = Column(Text)
+    # Picture = Column(LargeBinary)
     products = relationship('Product', back_populates='Category')
 
 
