@@ -1,5 +1,4 @@
 from pydantic.main import BaseModel
-from app import models2
 from typing import List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException
