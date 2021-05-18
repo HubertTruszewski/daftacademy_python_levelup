@@ -19,3 +19,8 @@ def get_all_suppliers(db: Session):
 
 def get_one_supplier(db: Session, sup_id: int):
     return db.query(models.Supplier).filter(models.Supplier.SupplierID == sup_id).first()
+
+
+def get_supplier_products(db: Session, sup_id: int):
+    result = db.query(models.Product.ProductID, models.Product.ProductName, models.Product.Discontinued, models.Product.SupplierID).filter(models.Shipper.ShipperID == models.Product.ProductID and models.Shipper.ShipperID == sup_id).all()
+    return result
