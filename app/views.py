@@ -1,4 +1,6 @@
-from typing import List
+from pydantic.main import BaseModel
+from app import models2
+from typing import List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import PositiveInt
@@ -8,6 +10,17 @@ from . import crud, schemas
 from .database import get_db
 
 router = APIRouter()
+
+
+class SupplierModel(BaseModel):
+    CompanyName: str
+    ContactName: Optional[str]
+    ContactTitle: Optional[str]
+    Address: Optional[str]
+    City: Optional[str]
+    PostalCode: Optional[str]
+    Country: Optional[str]
+    Phone: Optional[str]
 
 
 @router.get("/shippers/{shipper_id}", response_model=schemas.Shipper)
@@ -42,3 +55,8 @@ async def get_supplier_products(id: int, db: Session = Depends(get_db)):
     if result is None:
         raise HTTPException(status_code=404)
     return result
+
+
+@router.post('/suppliers', status_code=201)
+async def new_supplier(supplier: dict, db: Session = Depends(get_db)):
+    return crud.create_new_supplier(db, supplier)
