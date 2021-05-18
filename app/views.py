@@ -64,3 +64,8 @@ async def new_supplier(supplier: dict, db: Session = Depends(get_db)):
 @router.put('/suppliers/{id}', status_code=200)
 async def modify_supplier(id: int, supplier: dict, db: Session = Depends(get_db)):
     return crud.modify_supplier(id, db, supplier)
+
+
+@router.delete('/suppliers/{id}', status_code=204)
+async def delete_supplier(id: int, db: Session = Depends(get_db)):
+    return crud.delete_supplier(id, db)

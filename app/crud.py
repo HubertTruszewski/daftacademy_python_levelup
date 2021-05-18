@@ -40,3 +40,11 @@ def modify_supplier(id: int, db: Session, suppliers):
         db.query(models2.Supplier).filter(models2.Supplier.SupplierID == id).update(suppliers)
         db.commit()
     return db.query(models2.Supplier).filter(models2.Supplier.SupplierID == id).first()
+
+
+def delete_supplier(id: int, db: Session):
+    record = db.query(models2.Supplier).filter(models2.Supplier.SupplierID == id).first()
+    if record is None:
+        raise HTTPException(status_code=404)
+    db.delete(record)
+    db.commit()
