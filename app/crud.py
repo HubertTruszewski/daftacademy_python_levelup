@@ -1,3 +1,4 @@
+from fastapi.exceptions import HTTPException
 from sqlalchemy.orm import Session
 
 from . import models, models2
@@ -30,3 +31,11 @@ def create_new_supplier(db: Session, supplier):
     db.add(models2.Supplier(**supplier, SupplierID=id))
     db.commit()
     return db.query(models2.Supplier).order_by(models2.Supplier.SupplierID.desc()).limit(1).first()
+
+
+def modify_supplier(id: int, db: Session, suppliers):
+    if db.query(models2.Supplier).filter(models2.Supplier.SupplierID == id).first() is None:
+        raise HTTPException(status_code=404)
+    db.query(models2.Supplier).filter(models2.Supplier.SupplierID == id).update(suppliers)
+    db.commit()
+    return db.query(models2.Supplier).filter(models2.Supplier.SupplierID == id).first()

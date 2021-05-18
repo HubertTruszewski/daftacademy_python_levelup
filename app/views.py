@@ -59,3 +59,8 @@ async def get_supplier_products(id: int, db: Session = Depends(get_db)):
 @router.post('/suppliers', status_code=201)
 async def new_supplier(supplier: dict, db: Session = Depends(get_db)):
     return crud.create_new_supplier(db, supplier)
+
+
+@router.put('/suppliers/{id}', status_code=200)
+async def modify_supplier(id: int, supplier: dict, db: Session = Depends(get_db)):
+    return crud.modify_supplier(id, db, supplier)
