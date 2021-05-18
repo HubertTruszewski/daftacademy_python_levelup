@@ -36,6 +36,7 @@ def create_new_supplier(db: Session, supplier):
 def modify_supplier(id: int, db: Session, suppliers):
     if db.query(models2.Supplier).filter(models2.Supplier.SupplierID == id).first() is None:
         raise HTTPException(status_code=404)
-    db.query(models2.Supplier).filter(models2.Supplier.SupplierID == id).update(suppliers)
-    db.commit()
+    if len(suppliers) != 0:
+        db.query(models2.Supplier).filter(models2.Supplier.SupplierID == id).update(suppliers)
+        db.commit()
     return db.query(models2.Supplier).filter(models2.Supplier.SupplierID == id).first()
