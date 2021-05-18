@@ -26,6 +26,7 @@ def get_supplier_products(db: Session, sup_id: int):
 
 
 def create_new_supplier(db: Session, supplier):
-    db.add(models2.Supplier(**supplier))
+    id = db.query(models2.Supplier).count()+1
+    db.add(models2.Supplier(**supplier, SupplierID=id))
     db.commit()
     return db.query(models2.Supplier).order_by(models2.Supplier.SupplierID.desc()).limit(1).first()
