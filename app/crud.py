@@ -22,5 +22,9 @@ def get_one_supplier(db: Session, sup_id: int):
 
 
 def get_supplier_products(db: Session, sup_id: int):
-    result = db.query(models.Product.ProductID, models.Product.ProductName, models.Product.Discontinued, models.Product.SupplierID).filter(models.Shipper.ShipperID == models.Product.ProductID and models.Shipper.ShipperID == sup_id).all()
-    return result
+    results = db.query(models.Product.ProductID, models.Product.ProductName, models.Product.Discontinued, models.Product.CategoryID).filter(models.Shipper.ShipperID == models.Product.ProductID and models.Shipper.ShipperID == sup_id).all()
+    for result in results:
+        category = db.query(models.Category.CategoryID, models.Category.CategoryName).filter(models.Category.CategoryID == result.CategoryID).first()
+        setattr(result, "Category", category)
+        delattr(result, 'CategoryID')
+    return results
